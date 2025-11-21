@@ -4,30 +4,352 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Ad Earn - Demo</title>
-  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Base Styles */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 800px;
+      width: 100%;
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+    
+    /* Screen Styles */
+    .screen {
+      display: none;
+      padding: 40px 30px;
+      text-align: center;
+    }
+    
+    .screen.active {
+      display: block;
+    }
+    
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+      color: #2c3e50;
+    }
+    
+    .lead {
+      font-size: 1.2rem;
+      margin-bottom: 30px;
+      color: #555;
+    }
+    
+    /* Button Styles */
+    .btn {
+      display: inline-block;
+      padding: 12px 30px;
+      background-color: #f8f9fa;
+      color: #333;
+      border: none;
+      border-radius: 50px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      margin: 10px;
+    }
+    
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+    }
+    
+    .btn.primary {
+      background-color: #3498db;
+      color: white;
+    }
+    
+    .btn.primary:hover {
+      background-color: #2980b9;
+    }
+    
+    .btn.success {
+      background-color: #2ecc71;
+      color: white;
+    }
+    
+    .btn.success:hover {
+      background-color: #27ae60;
+    }
+    
+    /* Ad Container */
+    .ad-container {
+      width: 100%;
+      max-width: 728px;
+      height: 90px;
+      margin: 30px auto;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      border: 1px solid #e9ecef;
+    }
+    
+    .ad-placeholder {
+      color: #6c757d;
+      font-style: italic;
+    }
+    
+    /* Points Display */
+    .points-display {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background-color: white;
+      padding: 10px 20px;
+      border-radius: 50px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      font-weight: bold;
+      color: #2c3e50;
+      z-index: 100;
+    }
+    
+    /* Progress Bar */
+    .progress-container {
+      width: 100%;
+      height: 10px;
+      background-color: #e9ecef;
+      border-radius: 5px;
+      margin: 20px 0;
+      overflow: hidden;
+    }
+    
+    .progress-bar {
+      height: 100%;
+      background-color: #3498db;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+    
+    /* Ad Status */
+    .muted {
+      color: #6c757d;
+      font-style: italic;
+      margin-top: 15px;
+    }
+    
+    /* Ad Timer */
+    .ad-timer {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #3498db;
+      margin: 15px 0;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .container {
+        max-width: 95%;
+      }
+      
+      h1 {
+        font-size: 2rem;
+      }
+      
+      .lead {
+        font-size: 1rem;
+      }
+      
+      .ad-container {
+        height: 70px;
+      }
+    }
+  </style>
 </head>
 <body>
+  <div class="points-display">Points: <span id="points-counter">0</span></div>
+  
   <main class="container">
     <section id="screen-welcome" class="screen active">
-      <h1>Welcome</h1>
-      <p class="lead">Welcome to Ad Earn — watch ads and earn rewards!</p>
-      <button id="btn-next" class="btn">Next</button>
+      <h1>Welcome to Ad Earn</h1>
+      <p class="lead">Watch ads and earn rewards! Get points for every ad you watch and redeem them for exciting rewards.</p>
+      <button id="btn-next" class="btn primary">Get Started</button>
     </section>
 
     <section id="screen-start" class="screen">
-      <h1>Start</h1>
-      <p class="lead">Press the button below to start an ad and earn points.</p>
+      <h1>Watch & Earn</h1>
+      <p class="lead">Press the button below to start watching an ad and earn points.</p>
+      
+      <div class="ad-container">
+        <div id="ad-content" class="ad-placeholder">
+          Ad will appear here
+        </div>
+      </div>
+      
       <button id="btn-start-ad" class="btn primary">Start Ad</button>
-      <p id="ad-status" class="muted"></p>
+      <div id="ad-timer" class="ad-timer"></div>
+      <div class="progress-container">
+        <div id="progress-bar" class="progress-bar"></div>
+      </div>
+      <p id="ad-status" class="muted">Ready to watch ads</p>
     </section>
 
     <section id="screen-thanks" class="screen">
-      <h1>Thanks!</h1>
-      <p class="lead">Thanks for watching the ad. You've earned points.</p>
+      <h1>Thank You!</h1>
+      <p class="lead">Thanks for watching the ad. You've earned <span id="earned-points">10</span> points!</p>
+      <p class="muted">Your total points: <span id="total-points">0</span></p>
       <button id="btn-back" class="btn">Back to Welcome</button>
+      <button id="btn-watch-more" class="btn primary">Watch Another Ad</button>
     </section>
   </main>
 
-  <script src="script.js"></script>
+  <!-- AdSense Script -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2281800013403015"
+     crossorigin="anonymous"></script>
+
+  <script>
+    // DOM Elements
+    const screens = document.querySelectorAll('.screen');
+    const btnNext = document.getElementById('btn-next');
+    const btnStartAd = document.getElementById('btn-start-ad');
+    const btnBack = document.getElementById('btn-back');
+    const btnWatchMore = document.getElementById('btn-watch-more');
+    const adStatus = document.getElementById('ad-status');
+    const adTimer = document.getElementById('ad-timer');
+    const progressBar = document.getElementById('progress-bar');
+    const pointsCounter = document.getElementById('points-counter');
+    const earnedPoints = document.getElementById('earned-points');
+    const totalPoints = document.getElementById('total-points');
+    const adContent = document.getElementById('ad-content');
+    
+    // App State
+    let points = 0;
+    let adInterval;
+    let adDuration = 10; // seconds
+    let adPoints = 10;
+    
+    // Initialize
+    function init() {
+      // Load points from localStorage if available
+      const savedPoints = localStorage.getItem('adEarnPoints');
+      if (savedPoints) {
+        points = parseInt(savedPoints);
+        updatePointsDisplay();
+      }
+      
+      // Set up event listeners
+      btnNext.addEventListener('click', () => showScreen('screen-start'));
+      btnStartAd.addEventListener('click', startAd);
+      btnBack.addEventListener('click', () => showScreen('screen-welcome'));
+      btnWatchMore.addEventListener('click', () => showScreen('screen-start'));
+    }
+    
+    // Show specific screen
+    function showScreen(screenId) {
+      screens.forEach(screen => {
+        screen.classList.remove('active');
+      });
+      document.getElementById(screenId).classList.add('active');
+      
+      // Reset ad state when showing start screen
+      if (screenId === 'screen-start') {
+        resetAdState();
+      }
+    }
+    
+    // Start ad simulation
+    function startAd() {
+      // Disable button during ad
+      btnStartAd.disabled = true;
+      btnStartAd.textContent = 'Ad in Progress...';
+      
+      // Create a mock ad
+      createMockAd();
+      
+      // Start timer
+      let timeLeft = adDuration;
+      adTimer.textContent = `Ad ends in: ${timeLeft}s`;
+      progressBar.style.width = '0%';
+      
+      adInterval = setInterval(() => {
+        timeLeft--;
+        
+        // Update timer and progress
+        adTimer.textContent = `Ad ends in: ${timeLeft}s`;
+        const progressPercent = ((adDuration - timeLeft) / adDuration) * 100;
+        progressBar.style.width = `${progressPercent}%`;
+        
+        // Update status
+        adStatus.textContent = `Watching ad... ${adDuration - timeLeft}/${adDuration}s`;
+        
+        // When ad completes
+        if (timeLeft <= 0) {
+          clearInterval(adInterval);
+          completeAd();
+        }
+      }, 1000);
+    }
+    
+    // Create a mock ad display
+    function createMockAd() {
+      adContent.innerHTML = `
+        <div style="width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+          <h3 style="margin-bottom: 5px;">Advertisement</h3>
+          <p style="font-size: 0.8rem;">Demo Ad - This would be a real ad</p>
+        </div>
+      `;
+    }
+    
+    // Complete ad and award points
+    function completeAd() {
+      // Award points
+      points += adPoints;
+      updatePointsDisplay();
+      localStorage.setItem('adEarnPoints', points);
+      
+      // Update thanks screen
+      earnedPoints.textContent = adPoints;
+      totalPoints.textContent = points;
+      
+      // Show thanks screen
+      showScreen('screen-thanks');
+    }
+    
+    // Reset ad state
+    function resetAdState() {
+      clearInterval(adInterval);
+      btnStartAd.disabled = false;
+      btnStartAd.textContent = 'Start Ad';
+      adStatus.textContent = 'Ready to watch ads';
+      adTimer.textContent = '';
+      progressBar.style.width = '0%';
+      
+      // Reset ad content
+      adContent.innerHTML = 'Ad will appear here';
+    }
+    
+    // Update points display
+    function updatePointsDisplay() {
+      pointsCounter.textContent = points;
+    }
+    
+    // Initialize the app
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
 </body>
 </html>
