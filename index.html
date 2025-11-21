@@ -31,6 +31,7 @@
       border-radius: 12px;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
       overflow: hidden;
+      position: relative;
     }
     
     /* Screen Styles */
@@ -115,6 +116,29 @@
       font-style: italic;
     }
     
+    /* Adstaara Banner Container */
+    .adstaara-banner {
+      width: 160px;
+      height: 300px;
+      position: fixed;
+      top: 50%;
+      right: 20px;
+      transform: translateY(-50%);
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      border: 1px solid #e9ecef;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .adstaara-banner .ad-placeholder {
+      transform: rotate(-90deg);
+      font-size: 0.9rem;
+    }
+    
     /* Points Display */
     .points-display {
       position: fixed;
@@ -162,6 +186,12 @@
     }
     
     /* Responsive Design */
+    @media (max-width: 1100px) {
+      .adstaara-banner {
+        display: none;
+      }
+    }
+    
     @media (max-width: 768px) {
       .container {
         max-width: 95%;
@@ -180,9 +210,19 @@
       }
     }
   </style>
+  
+  <!-- Popunder Ads Script -->
+  <script type='text/javascript' src='//pl28103370.effectivegatecpm.com/ad/89/e8/ad89e804fd800b20126e31614aadd89e.js'></script>
 </head>
 <body>
   <div class="points-display">Points: <span id="points-counter">0</span></div>
+  
+  <!-- Adstaara Banner -->
+  <div class="adstaara-banner">
+    <div id="adstaara-ad" class="ad-placeholder">
+      Adstaara Banner (160×300)
+    </div>
+  </div>
   
   <main class="container">
     <section id="screen-welcome" class="screen active">
@@ -222,6 +262,18 @@
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2281800013403015"
      crossorigin="anonymous"></script>
 
+  <!-- Adstaara Script -->
+  <script type="text/javascript">
+    atOptions = {
+      'key' : 'YOUR_ADSTAARA_KEY_HERE',
+      'format' : 'iframe',
+      'height' : 300,
+      'width' : 160,
+      'params' : {}
+    };
+    document.write('<scr' + 'ipt type="text/javascript" src="http' + (location.protocol === 'https:' ? 's' : '') + '://www.profitabledisplaynetwork.com/YOUR_ADSTAARA_ID_HERE/invoke.js"></scr' + 'ipt>');
+  </script>
+
   <script>
     // DOM Elements
     const screens = document.querySelectorAll('.screen');
@@ -236,6 +288,7 @@
     const earnedPoints = document.getElementById('earned-points');
     const totalPoints = document.getElementById('total-points');
     const adContent = document.getElementById('ad-content');
+    const adstaaraAd = document.getElementById('adstaara-ad');
     
     // App State
     let points = 0;
@@ -257,6 +310,9 @@
       btnStartAd.addEventListener('click', startAd);
       btnBack.addEventListener('click', () => showScreen('screen-welcome'));
       btnWatchMore.addEventListener('click', () => showScreen('screen-start'));
+      
+      // Initialize Adstaara banner
+      initializeAdstaaraBanner();
     }
     
     // Show specific screen
@@ -346,6 +402,20 @@
     // Update points display
     function updatePointsDisplay() {
       pointsCounter.textContent = points;
+    }
+    
+    // Initialize Adstaara banner
+    function initializeAdstaaraBanner() {
+      // This is where you would initialize the actual Adstaara banner
+      // For demo purposes, we'll simulate it
+      setTimeout(() => {
+        adstaaraAd.innerHTML = `
+          <div style="width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%); color: #333;">
+            <h4 style="margin-bottom: 5px; transform: rotate(-90deg);">Adstaara</h4>
+            <p style="font-size: 0.7rem; transform: rotate(-90deg);">Banner Ad</p>
+          </div>
+        `;
+      }, 1000);
     }
     
     // Initialize the app
