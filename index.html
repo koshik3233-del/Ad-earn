@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AdEarn - Real Time Ad Earnings Platform</title>
+    <title>AdEarn - Earn Money by Viewing Ads</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -669,13 +669,6 @@
                     <div style="text-align: center; margin-top: 20px; color: var(--gray);">
                         Don't have an account? <a href="#" id="showSignup" style="color: var(--primary); font-weight: 600;">Sign up</a>
                     </div>
-                    
-                    <!-- Demo Credentials -->
-                    <div style="margin-top: 30px; padding: 20px; background: #f8fafc; border-radius: 12px;">
-                        <h4 style="color: var(--dark); margin-bottom: 10px;">Demo Credentials:</h4>
-                        <p style="color: var(--gray); font-size: 0.9rem; margin-bottom: 5px;">Email: demo@example.com</p>
-                        <p style="color: var(--gray); font-size: 0.9rem;">Password: password123</p>
-                    </div>
                 </div>
             </div>
         </div>
@@ -693,7 +686,7 @@
                             <input type="email" id="signupEmail" class="form-control" placeholder="Email Address" required>
                         </div>
                         <div class="form-group">
-                            <input type="password" id="signupPassword" class="form-control" placeholder="Password (min 6 chars)" required>
+                            <input type="password" id="signupPassword" class="form-control" placeholder="Password (minimum 6 characters)" required>
                         </div>
                         <div class="form-group">
                             <input type="password" id="signupConfirmPassword" class="form-control" placeholder="Confirm Password" required>
@@ -1083,28 +1076,27 @@
                     const state = JSON.parse(savedState);
                     Object.assign(AppState, state);
                 } else {
-                    // Default state for new users
-                    AppState.balance = 250;
-                    AppState.adsViewed = 42;
-                    AppState.totalEarned = 126;
-                    AppState.todayEarnings = 9;
-                    AppState.streakDays = 7;
-                    AppState.referralCount = 3;
-                    AppState.referralEarnings = 45;
-                    AppState.completedWithdrawal = 1000;
-                    
-                    // Default transactions
-                    AppState.transactions = [
-                        { id: 1, type: 'credit', amount: 3, description: 'Ad View Reward', date: getCurrentTime(), status: 'completed' },
-                        { id: 2, type: 'credit', amount: 3, description: 'Ad View Reward', date: getCurrentTime(-30), status: 'completed' },
-                        { id: 3, type: 'credit', amount: 15, description: 'Referral Bonus', date: getCurrentTime(-120), status: 'completed' },
-                        { id: 4, type: 'debit', amount: 500, description: 'Withdrawal to Bank', date: getCurrentTime(-1440), status: 'completed' },
-                        { id: 5, type: 'credit', amount: 5, description: 'Special Bonus Ad', date: getCurrentTime(-180), status: 'completed' }
-                    ];
+                    // Set default values for new users
+                    initializeNewUserState();
                 }
             } catch (e) {
                 console.error('Error loading state:', e);
+                initializeNewUserState();
             }
+        }
+
+        // Initialize state for new users
+        function initializeNewUserState() {
+            AppState.balance = 0;
+            AppState.adsViewed = 0;
+            AppState.totalEarned = 0;
+            AppState.todayEarnings = 0;
+            AppState.streakDays = 0;
+            AppState.referralCount = 0;
+            AppState.referralEarnings = 0;
+            AppState.completedWithdrawal = 0;
+            AppState.pendingWithdrawal = 0;
+            AppState.transactions = [];
         }
 
         // Save application state
@@ -1300,6 +1292,21 @@
             
             transactionsList.innerHTML = '';
             
+            // Show message if no transactions
+            if (AppState.transactions.length === 0) {
+                const emptyState = document.createElement('div');
+                emptyState.className = 'transaction-item';
+                emptyState.innerHTML = `
+                    <div style="text-align: center; width: 100%; padding: 40px 20px; color: var(--gray);">
+                        <i class="fas fa-receipt" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.5;"></i>
+                        <div style="font-size: 1.1rem;">No transactions yet</div>
+                        <div style="font-size: 0.9rem; margin-top: 5px;">Start viewing ads to earn money!</div>
+                    </div>
+                `;
+                transactionsList.appendChild(emptyState);
+                return;
+            }
+            
             AppState.transactions.forEach(transaction => {
                 const item = document.createElement('div');
                 item.className = 'transaction-item';
@@ -1407,25 +1414,28 @@
                 return;
             }
             
-            // Simulate API call delay
+            // Show loading state
             showLoading(true);
             
+            // Simulate API call delay
             setTimeout(() => {
-                // Check for demo credentials
-                if (email === 'demo@example.com' && password === 'password123') {
-                    // Demo user login
+                // Check existing users
+                const users = JSON.parse(localStorage.getItem('adEarnUsers')) || [];
+                const user = users.find(u => u.email === email && u.password === password);
+                
+                if (user) {
+                    // Login successful
                     AppState.currentUser = {
-                        name: 'Demo User',
-                        email: 'demo@example.com',
-                        joinDate: new Date().toLocaleDateString('en-US', { 
-                            year: 'numeric', 
-                            month: 'long', 
-                            day: 'numeric' 
-                        }),
-                        referralCode: 'DEMO1234'
+                        name: user.name,
+                        email: user.email,
+                        joinDate: user.joinDate,
+                        referralCode: user.referralCode
                     };
                     
                     AppState.isLoggedIn = true;
+                    
+                    // Load user-specific state
+                    loadUserState();
                     
                     // Save state
                     saveAppState();
@@ -1433,36 +1443,30 @@
                     // Update UI
                     updateUI();
                     showPage('home');
-                    showToast('Welcome back!', 'success');
+                    showToast('Login successful! Welcome back!', 'success');
                     
                     // Clear form
                     document.getElementById('loginForm').reset();
                 } else {
-                    // Check existing users
-                    const users = JSON.parse(localStorage.getItem('adEarnUsers')) || [];
-                    const user = users.find(u => u.email === email && u.password === password);
-                    
-                    if (user) {
-                        AppState.currentUser = {
-                            name: user.name,
-                            email: user.email,
-                            joinDate: user.joinDate,
-                            referralCode: user.referralCode
-                        };
-                        
-                        AppState.isLoggedIn = true;
-                        saveAppState();
-                        updateUI();
-                        showPage('home');
-                        showToast('Login successful!', 'success');
-                        document.getElementById('loginForm').reset();
-                    } else {
-                        showToast('Invalid email or password', 'error');
-                    }
+                    showToast('Invalid email or password', 'error');
                 }
                 
                 showLoading(false);
             }, 800);
+        }
+
+        // Load user-specific state
+        function loadUserState() {
+            const userStateKey = `adEarnState_${AppState.currentUser.email}`;
+            const savedUserState = localStorage.getItem(userStateKey);
+            
+            if (savedUserState) {
+                const userState = JSON.parse(savedUserState);
+                Object.assign(AppState, userState);
+            } else {
+                // Initialize fresh state for new user
+                initializeNewUserState();
+            }
         }
 
         // Handle signup
@@ -1490,10 +1494,16 @@
                 return;
             }
             
+            // Validate email format
+            if (!validateEmail(email)) {
+                showToast('Please enter a valid email address', 'error');
+                return;
+            }
+            
             // Check existing users
             const users = JSON.parse(localStorage.getItem('adEarnUsers')) || [];
             if (users.some(u => u.email === email)) {
-                showToast('Email already registered', 'error');
+                showToast('Email already registered. Please login instead.', 'error');
                 return;
             }
             
@@ -1523,10 +1533,25 @@
             };
             
             AppState.isLoggedIn = true;
+            
+            // Initialize new user state
+            initializeNewUserState();
+            
+            // Welcome bonus for new users
+            AppState.balance = 50; // ₹50 welcome bonus
+            AppState.transactions.push({
+                id: Date.now(),
+                type: 'credit',
+                amount: 50,
+                description: 'Welcome Bonus',
+                date: getCurrentTime(),
+                status: 'completed'
+            });
+            
             saveAppState();
             updateUI();
             showPage('home');
-            showToast('Account created successfully!', 'success');
+            showToast('Account created successfully! ₹50 welcome bonus added!', 'success');
             
             // Clear form
             document.getElementById('signupForm').reset();
@@ -1536,12 +1561,23 @@
         function handleLogout(e) {
             e.preventDefault();
             
+            // Save user state before logout
+            saveUserState();
+            
             AppState.currentUser = null;
             AppState.isLoggedIn = false;
-            localStorage.removeItem('adEarnUser');
             
             showPage('login');
             showToast('Logged out successfully', 'success');
+        }
+
+        // Save user-specific state
+        function saveUserState() {
+            if (!AppState.currentUser) return;
+            
+            const userStateKey = `adEarnState_${AppState.currentUser.email}`;
+            const { currentUser, ...stateToSave } = AppState;
+            localStorage.setItem(userStateKey, JSON.stringify(stateToSave));
         }
 
         // View ad
@@ -1549,10 +1585,11 @@
             const ad = AppState.ads.find(a => a.id === adId);
             if (!ad) return;
             
-            // Check if ad was recently viewed
+            // Check if ad was recently viewed (30 second cooldown)
             const now = Date.now();
-            if (AppState.lastAdView && (now - AppState.lastAdView) < 30000) { // 30 second cooldown
-                showToast('Please wait before viewing another ad', 'error');
+            if (AppState.lastAdView && (now - AppState.lastAdView) < 30000) {
+                const secondsLeft = Math.ceil((30000 - (now - AppState.lastAdView)) / 1000);
+                showToast(`Please wait ${secondsLeft} seconds before viewing another ad`, 'error');
                 return;
             }
             
@@ -1590,8 +1627,17 @@
                     <div style="width: 100%; height: 10px; background: #e2e8f0; border-radius: 5px; overflow: hidden;">
                         <div id="adProgressBar" style="height: 100%; background: linear-gradient(90deg, var(--secondary), var(--primary)); width: 0%; transition: width 1s linear;"></div>
                     </div>
+                    <button class="btn" id="cancelAdBtn" style="margin-top: 20px; width: 100%; background: #f1f5f9; color: var(--dark);">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
                 </div>
             `;
+            
+            // Add cancel button listener
+            document.getElementById('cancelAdBtn').addEventListener('click', () => {
+                clearInterval(AppState.activeAdTimers[ad.id]);
+                document.getElementById('adModal').classList.remove('active');
+            });
             
             // Start timer
             const countdownElement = document.getElementById('adCountdown');
@@ -1603,6 +1649,7 @@
                 
                 if (timeLeft <= 0) {
                     clearInterval(interval);
+                    delete AppState.activeAdTimers[ad.id];
                     completeAdView(ad);
                 }
             }, 1000);
@@ -1663,7 +1710,7 @@
             saveAppState();
             
             // Show toast
-            showToast(`₹${ad.reward} earned!`, 'success');
+            showToast(`₹${ad.reward} earned! Keep going to reach ₹500 for withdrawal.`, 'success');
             
             // Update streak
             updateStreak();
@@ -1717,10 +1764,12 @@
                 status: 'pending'
             });
             
-            // Simulate processing
+            // Show processing message
             showToast('Withdrawal request submitted. Processing...', 'success');
             
-            // Simulate completion after delay
+            // Simulate processing delay (2-5 seconds)
+            const processingTime = Math.floor(Math.random() * 3000) + 2000;
+            
             setTimeout(() => {
                 AppState.pendingWithdrawal -= amount;
                 AppState.completedWithdrawal += amount;
@@ -1729,12 +1778,13 @@
                 const transaction = AppState.transactions.find(t => t.id === AppState.transactions[0].id);
                 if (transaction) {
                     transaction.status = 'completed';
+                    transaction.description = `Withdrawal Completed (${method})`;
                 }
                 
                 updateWallet();
                 renderTransactions();
-                showToast(`Withdrawal of ₹${amount} completed!`, 'success');
-            }, 3000);
+                showToast(`Withdrawal of ₹${amount} completed! Funds will be transferred within 24 hours.`, 'success');
+            }, processingTime);
             
             // Update UI
             updateUI();
@@ -1752,66 +1802,120 @@
 
         // Show invite modal
         function showInviteModal() {
-            showToast(`Share your code: ${AppState.currentUser?.referralCode || 'ABCD1234'}`, 'success');
+            const referralCode = AppState.currentUser?.referralCode || 'ABCD1234';
+            const referralLink = `${window.location.origin}?ref=${referralCode}`;
             
-            // Simulate referral bonus
-            setTimeout(() => {
-                const bonus = Math.floor(Math.random() * 20) + 10;
-                AppState.balance += bonus;
-                AppState.referralEarnings += bonus;
-                AppState.referralCount++;
-                
-                AppState.transactions.unshift({
-                    id: Date.now(),
-                    type: 'credit',
-                    amount: bonus,
-                    description: 'Referral Bonus',
-                    date: getCurrentTime(),
-                    status: 'completed'
-                });
-                
-                updateUI();
-                updateDashboard();
-                renderTransactions();
-                showToast(`You earned ₹${bonus} referral bonus!`, 'success');
-                saveAppState();
-            }, 1000);
+            // Create invite modal
+            const modalContent = `
+                <div style="text-align: center;">
+                    <h2 style="color: var(--dark); margin-bottom: 20px;">Invite Friends & Earn</h2>
+                    <div style="background: linear-gradient(135deg, #f8fafc, #f1f5f9); padding: 25px; border-radius: 15px; margin-bottom: 25px;">
+                        <div style="font-size: 2rem; font-weight: 800; color: var(--primary); margin-bottom: 10px;">₹50</div>
+                        <div style="color: var(--gray);">Bonus per successful referral</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label style="display: block; margin-bottom: 10px; font-weight: 600; color: var(--dark); text-align: left;">Your Referral Code</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" class="form-control" value="${referralCode}" readonly id="referralCodeInput" style="flex: 1;">
+                            <button class="btn btn-primary" id="copyReferralCode">
+                                <i class="fas fa-copy"></i> Copy
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" style="margin-top: 20px;">
+                        <label style="display: block; margin-bottom: 10px; font-weight: 600; color: var(--dark); text-align: left;">Referral Link</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" class="form-control" value="${referralLink}" readonly id="referralLinkInput" style="flex: 1;">
+                            <button class="btn btn-primary" id="copyReferralLink">
+                                <i class="fas fa-copy"></i> Copy
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 30px; color: var(--gray); font-size: 0.9rem;">
+                        <p>Share your referral link with friends. When they sign up and earn their first ₹100, you'll get ₹50 bonus!</p>
+                    </div>
+                    
+                    <button class="btn" id="closeInviteModal" style="width: 100%; margin-top: 20px; background: #f1f5f9; color: var(--dark);">
+                        Close
+                    </button>
+                </div>
+            `;
+            
+            // Create modal
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    ${modalContent}
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Add event listeners
+            modal.querySelector('#copyReferralCode').addEventListener('click', () => {
+                copyToClipboard(referralCode);
+                showToast('Referral code copied!', 'success');
+            });
+            
+            modal.querySelector('#copyReferralLink').addEventListener('click', () => {
+                copyToClipboard(referralLink);
+                showToast('Referral link copied!', 'success');
+            });
+            
+            modal.querySelector('#closeInviteModal').addEventListener('click', () => {
+                modal.remove();
+            });
+            
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+        }
+
+        // Copy to clipboard
+        function copyToClipboard(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
         }
 
         // Start live updates
         function startLiveUpdates() {
-            // Update live ad count every 10 seconds
+            // Update live ad count every 30 seconds
             setInterval(() => {
                 if (AppState.isLoggedIn) {
                     updateLiveAdsPreview();
-                    
-                    // Random bonus chance
-                    if (Math.random() < 0.1) { // 10% chance
-                        const bonus = Math.floor(Math.random() * 5) + 1;
-                        AppState.balance += bonus;
-                        AppState.todayEarnings += bonus;
-                        AppState.totalEarned += bonus;
-                        
-                        AppState.transactions.unshift({
-                            id: Date.now(),
-                            type: 'credit',
-                            amount: bonus,
-                            description: 'Lucky Bonus',
-                            date: getCurrentTime(),
-                            status: 'completed'
-                        });
-                        
-                        updateUI();
-                        showToast(`You got a lucky bonus of ₹${bonus}!`, 'success');
-                        saveAppState();
-                    }
                 }
-            }, 10000);
+            }, 30000);
             
-            // Update streak daily
+            // Check for daily streak reset
             setInterval(() => {
-                updateStreak();
-            }, 60000); // Check every minute for demo
+                if (AppState.isLoggedIn) {
+                    checkDailyReset();
+                }
+            }, 60000);
+        }
+
+        // Check for daily reset
+        function checkDailyReset() {
+            const today = new Date().toDateString();
+            const lastReset = localStorage.getItem('lastDailyReset');
+            
+            if (lastReset !== today) {
+                // Reset daily earnings
+                AppState.todayEarnings = 0;
+                localStorage.setItem('lastDailyReset', today);
+                updateDashboard();
+                saveAppState();
+            }
         }
 
         // Update streak
@@ -1824,13 +1928,33 @@
                 localStorage.setItem('lastAdDay', today);
                 updateDashboard();
                 saveAppState();
+                
+                // Give streak bonus every 7 days
+                if (AppState.streakDays % 7 === 0) {
+                    const streakBonus = 50; // ₹50 bonus for 7-day streak
+                    AppState.balance += streakBonus;
+                    AppState.totalEarned += streakBonus;
+                    
+                    AppState.transactions.unshift({
+                        id: Date.now(),
+                        type: 'credit',
+                        amount: streakBonus,
+                        description: `7-Day Streak Bonus`,
+                        date: getCurrentTime(),
+                        status: 'completed'
+                    });
+                    
+                    updateUI();
+                    renderTransactions();
+                    showToast(`🎉 ${AppState.streakDays}-day streak! ₹${streakBonus} bonus added!`, 'success');
+                }
             }
         }
 
         // Get current time
-        function getCurrentTime(minutesAgo = 0) {
-            const date = new Date(Date.now() - minutesAgo * 60000);
-            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        function getCurrentTime() {
+            const now = new Date();
+            return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         }
 
         // Get account level
@@ -1843,7 +1967,18 @@
 
         // Generate referral code
         function generateReferralCode() {
-            return Math.random().toString(36).substring(2, 10).toUpperCase();
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let code = '';
+            for (let i = 0; i < 8; i++) {
+                code += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return code;
+        }
+
+        // Validate email
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
         }
 
         // Show toast
